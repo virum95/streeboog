@@ -1,1 +1,0 @@
-/usr/bin/cc -lm -g  -rdynamic CMakeFiles/hash.dir/src/hash.c.o  -o ../bin/hash 

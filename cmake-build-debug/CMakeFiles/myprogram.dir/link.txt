@@ -1,1 +1,0 @@
-/usr/bin/cc -lssl -lcrypto -g  -rdynamic CMakeFiles/myprogram.dir/src/cracker-dict.c.o  -o ../bin/myprogram 

@@ -1,1 +1,0 @@
-/usr/bin/cc -lm -g  -rdynamic CMakeFiles/prog.dir/src/prog.c.o  -o ../bin/prog  -L/home/virum/CLionProjects/helloWorld/lib/streebog -Wl,-rpath,/home/virum/CLionProjects/helloWorld/lib/streebog -lhasher 

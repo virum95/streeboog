@@ -4,28 +4,24 @@
 
 #define SIZE 16
 
-int compute_hash(char *str, unsigned char mdString[33]) {
-    unsigned char digest[SIZE];
-    MD5_CTX ctx;
-    int i;
+unsigned long
+doHash(unsigned char *str) {
+    unsigned long hash = 5381;
+    int c;
 
-    MD5_Init(&ctx);
-    MD5_Update(&ctx, str, strlen(str));
-    MD5_Final(digest, &ctx);
+    while (c = *str++)
+        hash = ((hash << 5) + hash) + c; /* hash * 33 + c */
 
-    for (i = 0; i < SIZE; i++)
-        sprintf(&mdString[i * 2], "%02x", (unsigned int) digest[i]);
-
-    return 0;
+    return hash;
 }
 
 
 int main(int argc, char *argv[]) {
-    char hashString[SIZE * 2 + 1];
+    unsigned long hash;
     if (argc == 2)
     {
-        compute_hash(argv[1], hashString);
-        printf("%s", hashString);
+        hash = doHash(argv[1]);
+        printf("%lu", hash);
     }
     else
     {

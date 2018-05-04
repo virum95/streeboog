@@ -1,0 +1,13 @@
+
+\.idea/
+
+bin/
+
+cmake-build-debug/
+
+build/
+
+
+core
+
+lib\.7z

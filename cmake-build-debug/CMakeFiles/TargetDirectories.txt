@@ -1,5 +1,0 @@
-/home/virum/CLionProjects/helloWorld/cmake-build-debug/CMakeFiles/rebuild_cache.dir
-/home/virum/CLionProjects/helloWorld/cmake-build-debug/CMakeFiles/edit_cache.dir
-/home/virum/CLionProjects/helloWorld/cmake-build-debug/CMakeFiles/hash.dir
-/home/virum/CLionProjects/helloWorld/cmake-build-debug/CMakeFiles/prog.dir
-/home/virum/CLionProjects/helloWorld/cmake-build-debug/CMakeFiles/cracker.dir

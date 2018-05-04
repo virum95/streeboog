@@ -2,24 +2,48 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "../lib/streebog/gost3411-2012.h"
-#include <memory.h>
 #include <math.h>
 
 #define MIN 4
 #define MAX 4
 //#define ALPHA "1234567890ABCDEFGHIJKLMNÑOPQRSTUVWXYZabcdefghijklmnñopqrstuvwxyz"
-#define ALPHA "abcdefghijklmnñopqrstuvwxyz"
-#define SECRET "2990e0c0316c9cf51dbc38df4fd50d780fbf3564cbfb3734c3acfd56a7161ed79c99c406420c48bb00930a71884f3acc9febeaddcc2791fc9484b9a60d0b0ba8"
-
-#include <omp.h>
+#define ALPHA "abcdefghijklmnopqrstuvwxyz1234567890"
+//#define SECRET "2990e0c0316c9cf51dbc38df4fd50d780fbf3564cbfb3734c3acfd56a7161ed79c99c406420c48bb00930a71884f3acc9febeaddcc2791fc9484b9a60d0b0ba8"
+#define SECRET "6385374830"
 
 long get_keyspace(char *alpha, int max) {
     long size = 1;
     for (int i = 0; i < max; ++i)
     {
-            size = size*strlen(alpha);
+        size = size * strlen(alpha);
     }
     return size;
+}
+
+
+uint32_t adler32(const void *buf, size_t buflength) {
+    const uint8_t *buffer = (const uint8_t *) buf;
+
+    uint32_t s1 = 1;
+    uint32_t s2 = 0;
+
+    for (size_t n = 0; n < buflength; n++)
+    {
+        s1 = (s1 + buffer[n]) % 65521;
+        s2 = (s2 + s1) % 65521;
+    }
+    return (s2 << 16) | s1;
+}
+
+unsigned long
+doHash(unsigned char *str) {
+    unsigned long hash = 5381;
+    int c;
+
+    while ((c = *str++))
+        hash = ((hash << 5) + hash) + c; /* hash * 33 + c */
+
+    return hash;
 }
 
 int main(int argc, char *argv[]) {
@@ -34,7 +58,7 @@ int main(int argc, char *argv[]) {
     char *alphabet;
     int size;
     int found = 0;
-    char * password;
+    char *password;
 
 
     int ch;
@@ -58,18 +82,24 @@ int main(int argc, char *argv[]) {
 
     alphabet = avalue != NULL ? strdup(avalue) : ALPHA;
     size = svalue != NULL ? atoi(svalue) : MAX;
-    char secret[128];
+    char secret[129] = {0};
+    unsigned long hash;
     if (optind > argc)
     {
-        strcpy(secret,SECRET);
+        hash = (unsigned long) atol(SECRET);
+//        strcpy(secret, SECRET);
+//        strcat(secret, '\0');
     }
     else
     {
-        strcpy(secret, argv[optind]);
+        hash = (unsigned long) atol(argv[optind]);
+//        strcpy(secret, argv[optind]);
+//        strcat(secret, '\0');
     }
-
-    int len = strlen(alphabet);
-    long keyspace = get_keyspace(alphabet , size);
+//    printf("Hash-->%lu<--\n", hash);
+//    printf("-->%s<--\n", secret);
+    int len = (int) strlen(alphabet);
+    long keyspace = get_keyspace(alphabet, size);
 
     int index[size];
 
@@ -79,26 +109,33 @@ int main(int argc, char *argv[]) {
     {
         index[i] = 0;
     }
-#pragma omp parallel for private(candidate, index, j)
+    int j;
+    int k;
+#pragma omp parallel for private(candidate, index, j, k) shared(found)
     for (long i = 0; i < keyspace; ++i)
     {
         if (found == 0)
         {
-            strcpy(candidate, "");
-            for (int j = size - 1; j >= 0; --j)
+            for (k = 1; k <= size; ++k)
             {
-                index[j] = (i / (int) pow(len, j)) % len;
-                sprintf(candidate, "%s%c", candidate, alphabet[index[j]]);
-            }
-            if (strcmp(compute_hash(candidate), secret) == 0)
-            {
-                printf("Secret found: **%s**\n", candidate);
-                found = 1;
-//                return 0;
+                strcpy(candidate, "");
+                for (j = k - 1; j >= 0; --j)
+                {
+                    index[j] = (int) ((i / (int) pow(len, j)) % len);
+//                printf("%d\n", index[j]);
+                    sprintf(candidate, "%s%c", candidate, alphabet[index[j]]);
+                }
+//            printf("candidate: --%s--\n", candidate);
+//            if (strcmp(compute_hash(candidate), secret) == 0)
+                if (doHash(&candidate[0]) == hash)
+                {
+                    printf("Secret found: **%s**\n", candidate);
+                    found = 1;
+                }
             }
         }
     }
-    if (found == 1)
+    if (found == 0)
     {
         printf("Password not found :(");
     }
