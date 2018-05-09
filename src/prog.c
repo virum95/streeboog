@@ -7,7 +7,7 @@
 #define MIN 4
 #define MAX 4
 //#define ALPHA "1234567890ABCDEFGHIJKLMNÑOPQRSTUVWXYZabcdefghijklmnñopqrstuvwxyz"
-#define ALPHA "abcdefghijklmnopqrstuvwxyz1234567890"
+#define ALPHA "abcdefghijklmnopqrstuvwxyz"
 //#define SECRET "2990e0c0316c9cf51dbc38df4fd50d780fbf3564cbfb3734c3acfd56a7161ed79c99c406420c48bb00930a71884f3acc9febeaddcc2791fc9484b9a60d0b0ba8"
 #define SECRET "6385374830"
 
@@ -18,6 +18,21 @@ long get_keyspace(char *alpha, int max) {
         size = size * strlen(alpha);
     }
     return size;
+}
+
+unsigned long
+doHash(char *key, size_t len) {
+    uint32_t hash, i;
+    for (hash = i = 0; i < len; ++i)
+    {
+        hash += key[i];
+        hash += (hash << 10);
+        hash ^= (hash >> 6);
+    }
+    hash += (hash << 3);
+    hash ^= (hash >> 11);
+    hash += (hash << 15);
+    return hash;
 }
 
 
@@ -35,16 +50,6 @@ uint32_t adler32(const void *buf, size_t buflength) {
     return (s2 << 16) | s1;
 }
 
-unsigned long
-doHash(unsigned char *str) {
-    unsigned long hash = 5381;
-    int c;
-
-    while ((c = *str++))
-        hash = ((hash << 5) + hash) + c; /* hash * 33 + c */
-
-    return hash;
-}
 
 int main(int argc, char *argv[]) {
 
@@ -83,7 +88,8 @@ int main(int argc, char *argv[]) {
     alphabet = avalue != NULL ? strdup(avalue) : ALPHA;
     size = svalue != NULL ? atoi(svalue) : MAX;
     char secret[129] = {0};
-    unsigned long hash;
+//    unsigned long hash;
+    uint32_t hash;
     if (optind > argc)
     {
         hash = (unsigned long) atol(SECRET);
@@ -92,7 +98,7 @@ int main(int argc, char *argv[]) {
     }
     else
     {
-        hash = (unsigned long) atol(argv[optind]);
+        hash = (uint32_t) atol(argv[optind]);
 //        strcpy(secret, argv[optind]);
 //        strcat(secret, '\0');
     }
@@ -125,9 +131,9 @@ int main(int argc, char *argv[]) {
 //                printf("%d\n", index[j]);
                     sprintf(candidate, "%s%c", candidate, alphabet[index[j]]);
                 }
-//            printf("candidate: --%s--\n", candidate);
+//                printf("candidate: %s-%u\n", candidate, adler32(&candidate, k));
 //            if (strcmp(compute_hash(candidate), secret) == 0)
-                if (doHash(&candidate[0]) == hash)
+                if (doHash(candidate, k) == hash)
                 {
                     printf("Secret found: **%s**\n", candidate);
                     found = 1;
@@ -135,6 +141,7 @@ int main(int argc, char *argv[]) {
             }
         }
     }
+
     if (found == 0)
     {
         printf("Password not found :(");
